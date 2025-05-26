@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   final newTitle = editController.text.trim();
                   if (newTitle.isNotEmpty) {
-                    context.read<TodoProvider>().editTodo(todo.id, newTitle);
+                    context.read<TodoProvider>().updateTodo(todo.id, newTitle);
                   }
                   Navigator.of(context).pop();
                 },

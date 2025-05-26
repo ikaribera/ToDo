@@ -5,6 +5,8 @@ import '../models/todo_model.dart';
 enum FilterStatus { all, completed, incomplete }
 
 class TodoProvider extends ChangeNotifier {
+  final box = Hive.box<ToDo>('todos');
+  List<ToDo> get allTodos => _todoBox.values.toList();
   late Box<ToDo> _todoBox;
   FilterStatus _filter = FilterStatus.all;
 
@@ -18,7 +20,6 @@ class TodoProvider extends ChangeNotifier {
   }
 
   List<ToDo> get todos {
-    final allTodos = _todoBox.values.toList();
     switch (_filter) {
       case FilterStatus.completed:
         return allTodos.where((todo) => todo.isDone).toList();
@@ -37,7 +38,7 @@ class TodoProvider extends ChangeNotifier {
   }
 
   void addTodo(ToDo todo) {
-    _todoBox.put(todo.id, todo);
+    box.put(todo.id, todo);
     notifyListeners();
   }
 
@@ -55,7 +56,7 @@ class TodoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void editTodo(String id, String newTitle) {
+  void updateTodo(String id, String newTitle) {
     final todo = _todoBox.get(id);
     if (todo != null) {
       todo.title = newTitle;
