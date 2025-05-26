@@ -1,7 +1,17 @@
 // digunakan untuk membuat struktur data todo
-class ToDo {
-  final String id;
+
+import 'package:hive/hive.dart';
+part 'todo_model.g.dart'; // Hive akan generate file ini
+
+@HiveType(typeId: 0)
+class ToDo extends HiveObject {
+  @HiveField(0)
+  String id;
+
+  @HiveField(1)
   String title;
+
+  @HiveField(2)
   bool isDone;
 
   ToDo({required this.id, required this.title, this.isDone = false});

@@ -17,24 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _controller = TextEditingController();
   final uuid = const Uuid();
 
-  // // save to local storage
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _loadInitialData();
-  // }
-
-  // // save to local storage
-  // void _loadInitialData() async {
-  //   await _todoService.loadTodos();
-  //   setState(() {});
-  // }
-
   void _addTodo(String title) {
     if (title.isEmpty) return;
-    final newTodo = ToDo(id: uuid.v4(), title: title);
-    final provider = context.read<TodoProvider>();
-    provider.addTodo(newTodo);
+    final newTodo = ToDo(id: const Uuid().v4(), title: _controller.text);
+    context.read<TodoProvider>().addTodo(newTodo);
     _controller.clear();
   }
 
@@ -72,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   final newTitle = editController.text.trim();
                   if (newTitle.isNotEmpty) {
-                    context.read<TodoProvider>().updateTodo(todo.id, newTitle);
+                    context.read<TodoProvider>().editTodo(todo.id, newTitle);
                   }
                   Navigator.of(context).pop();
                 },

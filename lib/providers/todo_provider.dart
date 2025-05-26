@@ -1,31 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
 import '../models/todo_model.dart';
-import 'dart:convert';
 
 enum FilterStatus { all, completed, incomplete }
 
 class TodoProvider extends ChangeNotifier {
-  List<ToDo> _todos = [];
-  // List<ToDo> get todos => _todos;
+  late Box<ToDo> _todoBox;
   FilterStatus _filter = FilterStatus.all;
 
+  TodoProvider() {
+    _init();
+  }
+
+  Future<void> _init() async {
+    _todoBox = Hive.box<ToDo>('todos');
+    notifyListeners();
+  }
+
   List<ToDo> get todos {
+    final allTodos = _todoBox.values.toList();
     switch (_filter) {
       case FilterStatus.completed:
-        return _todos.where((todo) => todo.isDone).toList();
+        return allTodos.where((todo) => todo.isDone).toList();
       case FilterStatus.incomplete:
-        return _todos.where((todo) => !todo.isDone).toList();
+        return allTodos.where((todo) => !todo.isDone).toList();
       case FilterStatus.all:
-        return _todos;
+        return allTodos;
     }
   }
 
   FilterStatus get filter => _filter;
-
-  TodoProvider() {
-    loadTodos(); // auto-load saat provider diinisialisasi
-  }
 
   void setFilter(FilterStatus filter) {
     _filter = filter;
@@ -33,54 +37,30 @@ class TodoProvider extends ChangeNotifier {
   }
 
   void addTodo(ToDo todo) {
-    _todos.add(todo);
+    _todoBox.put(todo.id, todo);
     notifyListeners();
-    saveTodos();
   }
 
   void toggleTodo(String id) {
-    final index = _todos.indexWhere((todo) => todo.id == id);
-    if (index != -1) {
-      _todos[index].isDone = !_todos[index].isDone;
+    final todo = _todoBox.get(id);
+    if (todo != null) {
+      todo.isDone = !todo.isDone;
+      todo.save();
       notifyListeners();
-      saveTodos();
     }
   }
 
   void deleteTodo(String id) {
-    _todos.removeWhere((todo) => todo.id == id);
+    _todoBox.delete(id);
     notifyListeners();
-    saveTodos();
   }
 
-  void editTodo(String id) {
-    _todos.removeWhere((todo) => todo.id == id);
-    notifyListeners();
-    saveTodos();
-  }
-
-  Future<void> loadTodos() async {
-    final prefs = await SharedPreferences.getInstance();
-    final todosJson = prefs.getString('todos');
-    if (todosJson != null) {
-      final List decoded = jsonDecode(todosJson);
-      _todos = decoded.map((e) => ToDo.fromJson(e)).toList();
+  void editTodo(String id, String newTitle) {
+    final todo = _todoBox.get(id);
+    if (todo != null) {
+      todo.title = newTitle;
+      todo.save();
       notifyListeners();
-    }
-  }
-
-  Future<void> saveTodos() async {
-    final prefs = await SharedPreferences.getInstance();
-    final encoded = jsonEncode(_todos.map((e) => e.toJson()).toList());
-    await prefs.setString('todos', encoded);
-  }
-
-  void updateTodo(String id, String newTitle) {
-    final index = _todos.indexWhere((todo) => todo.id == id);
-    if (index != -1) {
-      _todos[index].title = newTitle;
-      notifyListeners();
-      saveTodos();
     }
   }
 }
